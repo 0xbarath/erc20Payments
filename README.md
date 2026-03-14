@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ERC-20 Vendor Checkout
 
-## Getting Started
+Stablecoin payment checkout app powered by Porto wallet. Merchants display QR codes for payment intents; users scan/open and pay with USDC on testnet.
 
-First, run the development server:
+> **Disclaimer**: The "X9A-compatible" schema naming reflects architectural alignment with X9 payment data concepts, not standards compliance. This is not a normative X9.150 implementation.
+
+## Stack
+
+- **Frontend**: Next.js 16, Tailwind CSS v4, shadcn/ui
+- **Wallet**: Wagmi + Porto connector
+- **Chains**: Base Sepolia (84532), Optimism Sepolia (11155420)
+- **Token**: Testnet USDC (ERC-20)
+- **Database**: Supabase (Postgres + RLS)
+- **Testing**: Vitest
+
+## Setup
 
 ```bash
+# Install dependencies
+npm install
+
+# Copy env vars
+cp .env.example .env.local
+# Fill in Supabase credentials
+
+# Run Supabase migrations (in Supabase dashboard or CLI)
+# See db/migrations/*.sql
+
+# Seed the database
+npm run seed
+
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only) |
+| `NEXT_PUBLIC_APP_URL` | App URL for QR code generation |
+| `NEXT_PUBLIC_DEFAULT_CHAIN_ID` | Default chain (84532) |
+| `NEXT_PUBLIC_ENABLE_FAUCET` | Enable testnet faucet (true/false) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supabase Setup
 
-## Learn More
+1. Create a new Supabase project
+2. Run the SQL migrations in `db/migrations/` in order
+3. Copy the project URL and keys to `.env.local`
+4. Run `npm run seed` to insert demo data
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+User scans QR → /pay/[intentId] → Connect Porto wallet → Pay USDC → On-chain verify
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Payment Status Flow**:
+```
+awaiting_payment → wallet_connected → payment_submitted → payment_confirming → payment_confirmed
+                                    → payment_failed
+awaiting_payment → expired
+```
 
-## Deploy on Vercel
+**Key Directories**:
+- `lib/domain/` — Payment intent schema, status machine
+- `lib/services/` — Business logic (create intent, transition status, verify on-chain)
+- `lib/porto/` — Porto wallet adapters
+- `lib/erc20/` — ERC-20 calldata encoding
+- `app/api/` — API routes
+- `hooks/` — React hooks for wallet, payment, faucet
+- `components/` — UI components
+- `db/` — SQL migrations and seed script
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Porto Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Uses `wallet_sendCalls` for direct ERC-20 transfer execution
+- Faucet uses Porto's `experimental_addFaucetFunds` for testnet funding
+- Prepared-call extension point stubbed in `lib/porto/prepared-calls.ts`
+
+## Faucet
+
+The testnet faucet is enabled by default (`NEXT_PUBLIC_ENABLE_FAUCET=true`). It allows users to request test USDC via Porto's built-in faucet. Disable in production.
+
+## Testing
+
+```bash
+npm test
+```
+
+## Deploy
+
+```bash
+vercel deploy
+```
+
+Configure environment variables in the Vercel dashboard. Runtime is Node.js (not Edge) for Supabase SSR cookie handling.
