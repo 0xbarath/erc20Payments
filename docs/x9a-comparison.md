@@ -40,15 +40,23 @@ These are application-specific extensions with no X9 equivalent:
 
 ## EMVCo TLV QR Code Encoder/Decoder (Implemented)
 
-As of this version, the app **does** generate EMVCo-compatible TLV-encoded QR codes. The QR payload is no longer a bare URL — it is a self-contained EMVCo Merchant-Presented QR string.
+The app generates EMVCo-compatible TLV-encoded payment data via `buildEmvQrData()`. However, the **QR code image** encodes the payment URL (`/pay/{intentId}`), not the TLV string. This is because standard phone QR scanners cannot interpret raw TLV data as a navigable link.
 
-### What changed
+The TLV data is generated and available for future wallet integrations that can parse EMVCo payloads directly.
 
-| Before | After |
-|--------|-------|
-| QR encoded a URL (`/pay/{intentId}`) | QR encodes a full TLV string with standard EMVCo fields + blockchain extension |
-| No in-payload checksum | CRC16-CCITT checksum (tag 63) |
-| No offline-readable payment data | Standard EMVCo fields readable by any compliant scanner (amount, currency, merchant) |
+### QR code strategy
+
+| Layer | Content | Purpose |
+|-------|---------|---------|
+| **QR image** | Payment URL (`/pay/{intentId}`) | Scannable by any phone camera — opens the payment page in a browser |
+| **EMVCo TLV data** | Full TLV string with standard fields + blockchain extension | Available for wallet apps that parse EMVCo payloads (future integration) |
+
+### Payment page (`/pay/{intentId}`)
+
+When a user scans the QR code or clicks an intent in the vendor table, they land on the payment page which shows:
+- A QR code (for active, non-terminal intents) so the vendor can share/display it
+- Payment details (amount, merchant, token, network, status)
+- Wallet connection and payment actions
 
 ### Standard EMVCo fields used
 

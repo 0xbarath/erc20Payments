@@ -37,7 +37,7 @@ export function FaucetPanel({
             ? "Requesting..."
             : status === "funded"
               ? "Funded! Request again"
-              : "Get test USDC"}
+              : "Get test EXP"}
         </Button>
 
         {status === "funded" && txHash && (

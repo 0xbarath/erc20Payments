@@ -1,5 +1,6 @@
 "use client";
 
+import QRCode from "react-qr-code";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PaymentStatusBadge } from "@/components/payment/payment-status-badge";
@@ -7,20 +8,38 @@ import { PaymentActions } from "@/components/payment/payment-actions";
 import { FaucetPanel } from "@/components/faucet/faucet-panel";
 import { WalletStatus } from "@/components/payment/wallet-status";
 import { usePaymentStatus } from "@/hooks/use-payment-status";
+import { isTerminal } from "@/lib/domain/payment-status";
 import type { PaymentIntent } from "@/lib/domain/x9a-compatible-intent";
 
 export function PaymentClient({
   intent: initialIntent,
+  paymentUrl,
 }: {
   intent: PaymentIntent;
+  paymentUrl: string;
 }) {
   const { intent, refetch } = usePaymentStatus(initialIntent.id);
   const current = intent ?? initialIntent;
 
   const expired = new Date(current.expiresAt) < new Date();
+  const terminal = isTerminal(current.status);
+  const showQr = !expired && !terminal;
 
   return (
     <div className="space-y-6">
+      {showQr && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-2 pt-6">
+            <div className="rounded-lg bg-white p-4">
+              <QRCode value={paymentUrl} size={180} level="M" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Scan to pay with a mobile wallet
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">

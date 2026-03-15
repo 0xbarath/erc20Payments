@@ -19,11 +19,11 @@ describe("Payment flow integration", () => {
     expect(validated.displayAmount).toBe("42.50");
 
     // Step 2: Compute atomic amount
-    const atomic = toAtomicAmount(validated.displayAmount, 6);
-    expect(atomic).toBe("42500000");
+    const atomic = toAtomicAmount(validated.displayAmount, 18);
+    expect(atomic).toBe("42500000000000000000");
 
     // Step 3: Verify round-trip
-    const human = fromAtomicAmount(atomic, 6);
+    const human = fromAtomicAmount(atomic, 18);
     expect(human).toBe("42.5");
 
     // Step 4: Build a mock intent
@@ -38,9 +38,9 @@ describe("Payment flow integration", () => {
       displayCurrency: "USD",
       displayAmount: validated.displayAmount,
       chainId: validated.chainId,
-      tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-      tokenSymbol: "USDC",
-      tokenDecimals: 6,
+      tokenAddress: "0xfca413a634c4df6b98ebb970a44d9a32f8f5c64e",
+      tokenSymbol: "EXP",
+      tokenDecimals: 18,
       recipientAddress: "0x742d35cc6634c0532925A3b844bc9E7595F2Bd1e",
       atomicAmount: atomic,
       nonce: crypto.randomUUID(),

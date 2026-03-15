@@ -1,3 +1,4 @@
+
 import { describe, it, expect } from "vitest";
 import { buildErc20TransferCall } from "@/lib/erc20/calldata";
 import { decodeFunctionData, erc20Abi } from "viem";
@@ -14,11 +15,11 @@ const mockIntent: PaymentIntent = {
   displayCurrency: "USD",
   displayAmount: "25.00",
   chainId: 84532,
-  tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  tokenSymbol: "USDC",
-  tokenDecimals: 6,
+  tokenAddress: "0xfca413a634c4df6b98ebb970a44d9a32f8f5c64e",
+  tokenSymbol: "EXP",
+  tokenDecimals: 18,
   recipientAddress: "0x742d35cc6634c0532925A3b844bc9E7595F2Bd1e",
-  atomicAmount: "25000000",
+  atomicAmount: "25000000000000000000",
   nonce: "00000000-0000-0000-0000-000000000003",
   expiresAt: "2099-01-01T00:00:00.000Z",
   status: "awaiting_payment",

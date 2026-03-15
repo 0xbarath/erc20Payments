@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import type { PaymentIntent } from "@/lib/domain/x9a-compatible-intent";
@@ -18,8 +19,21 @@ export function PaymentActions({
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { execute, status, txHash, error } = usePaymentExecution(intent);
+  const transitioningRef = useRef(false);
 
   const terminal = isTerminal(intent.status);
+
+  // Auto-transition to wallet_connected when wallet is already connected on mount
+  useEffect(() => {
+    if (isConnected && intent.status === "awaiting_payment" && !transitioningRef.current) {
+      transitioningRef.current = true;
+      postPaymentStatus({ intentId: intent.id, status: "wallet_connected" })
+        .then((res) => {
+          if (res.ok) onStatusChange?.();
+        })
+        .finally(() => { transitioningRef.current = false; });
+    }
+  }, [isConnected, intent.status, intent.id, onStatusChange]);
 
   if (terminal) {
     if (intent.status === "payment_confirmed") {
@@ -39,17 +53,7 @@ export function PaymentActions({
         onClick={() => {
           const connector = connectors[0];
           if (connector) {
-            connect(
-              { connector },
-              {
-                onSuccess: () => {
-                  postPaymentStatus({
-                    intentId: intent.id,
-                    status: "wallet_connected",
-                  }).then(() => onStatusChange?.());
-                },
-              }
-            );
+            connect({ connector });
           }
         }}
       >
@@ -66,7 +70,13 @@ export function PaymentActions({
         </Button>
       </div>
 
-      {status === "idle" && (
+      {status === "idle" && intent.status === "awaiting_payment" && (
+        <Button className="w-full" size="lg" disabled>
+          Connecting...
+        </Button>
+      )}
+
+      {status === "idle" && intent.status !== "awaiting_payment" && (
         <Button className="w-full" size="lg" onClick={execute}>
           Pay ${intent.displayAmount} {intent.tokenSymbol}
         </Button>

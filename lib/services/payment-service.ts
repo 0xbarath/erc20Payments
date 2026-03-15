@@ -119,13 +119,11 @@ export async function transitionPaymentStatus(
 
 export async function verifyOnChain(
   supabase: SupabaseClient,
-  intentId: string
+  intentId: string,
+  txHash: string
 ): Promise<PaymentIntent> {
   const intent = await getIntentById(supabase, intentId);
   if (!intent) throw new IntentNotFoundError(intentId);
-
-  const txHash = intent.portoExtension?.txHash;
-  if (!txHash) throw new Error("No transaction hash to verify");
 
   const client = getPublicClient(intent.chainId);
 

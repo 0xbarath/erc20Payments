@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getIntentById } from "@/lib/repositories/payment-intents";
+import { buildPaymentUrl } from "@/lib/qr/serialize";
 import { PaymentClient } from "./payment-client";
 
 export default async function PayPage({
@@ -14,5 +15,7 @@ export default async function PayPage({
 
   if (!intent) notFound();
 
-  return <PaymentClient intent={intent} />;
+  const paymentUrl = buildPaymentUrl(intent);
+
+  return <PaymentClient intent={intent} paymentUrl={paymentUrl} />;
 }

@@ -22,7 +22,7 @@ async function seed() {
         name: "Acme Store",
         recipient_address: "0x742d35cc6634c0532925A3b844bc9E7595F2Bd1e",
         default_chain_id: 84532,
-        default_token_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        default_token_address: "0xfca413a634c4df6b98ebb970a44d9a32f8f5c64e",
       },
       { onConflict: "slug" }
     )
@@ -35,46 +35,6 @@ async function seed() {
   }
 
   console.log("Seeded vendor:", vendor.name);
-
-  // Create a sample payment intent
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-  const nonce = crypto.randomUUID();
-
-  const { data: intent, error: intentError } = await supabase
-    .from("payment_intents")
-    .insert({
-      vendor_id: vendor.id,
-      vendor_slug: "acme-store",
-      invoice_id: `INV-${Date.now()}`,
-      merchant_name: "Acme Store",
-      display_currency: "USD",
-      display_amount: "25.00",
-      chain_id: 84532,
-      token_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-      token_symbol: "USDC",
-      token_decimals: 6,
-      recipient_address: vendor.recipient_address,
-      atomic_amount: "25000000",
-      nonce,
-      expires_at: expiresAt,
-      status: "awaiting_payment",
-    })
-    .select()
-    .single();
-
-  if (intentError) {
-    console.error("Failed to seed payment intent:", intentError);
-    process.exit(1);
-  }
-
-  console.log("Seeded payment intent:", intent.id, "($25.00 USDC)");
-
-  // Log initial event
-  await supabase.from("payment_events").insert({
-    payment_intent_id: intent.id,
-    event_type: "intent_created",
-    payload: { source: "seed" },
-  });
 
   console.log("Seed complete!");
 }

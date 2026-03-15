@@ -7,21 +7,21 @@ export interface TokenConfig {
   symbol: string;
 }
 
-export const USDC_CONFIG: Record<number, TokenConfig> = {
+export const TOKEN_CONFIG: Record<number, TokenConfig> = {
   [baseSepolia.id]: {
-    address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-    decimals: 6,
-    symbol: "USDC",
+    address: "0xfca413a634c4df6b98ebb970a44d9a32f8f5c64e",
+    decimals: 18,
+    symbol: "EXP",
   },
   [optimismSepolia.id]: {
-    address: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
-    decimals: 6,
-    symbol: "USDC",
+    address: "0xfca413a634c4df6b98ebb970a44d9a32f8f5c64e",
+    decimals: 18,
+    symbol: "EXP",
   },
 };
 
 export function getTokenConfig(chainId: number): TokenConfig {
-  const config = USDC_CONFIG[chainId];
+  const config = TOKEN_CONFIG[chainId];
   if (!config) throw new Error(`No token config for chain: ${chainId}`);
   return config;
 }

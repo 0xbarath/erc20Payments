@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/porto/crypto-polyfill";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "@/lib/porto/config";

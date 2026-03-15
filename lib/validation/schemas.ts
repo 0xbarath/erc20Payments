@@ -22,4 +22,5 @@ export type PaymentStatusUpdate = z.infer<typeof paymentStatusUpdateSchema>;
 
 export const verifyPaymentSchema = z.object({
   intentId: z.string().uuid(),
+  txHash: z.string().min(1),
 });

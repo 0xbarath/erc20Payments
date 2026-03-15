@@ -21,7 +21,7 @@ export async function requestFaucetFunds(params: {
   const result = await addFaucetFunds(client, {
     address: params.address as `0x${string}`,
     tokenAddress: params.tokenAddress as `0x${string}`,
-    value: 10_000_000n, // 10 USDC (6 decimals)
+    value: 10n * 10n ** 18n, // 10 EXP (18 decimals)
   });
 
   return result?.transactionHash ?? null;

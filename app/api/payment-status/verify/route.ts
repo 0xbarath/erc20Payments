@@ -7,9 +7,9 @@ import { handleApiError } from "@/lib/api-utils";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { intentId } = verifyPaymentSchema.parse(body);
+    const { intentId, txHash } = verifyPaymentSchema.parse(body);
     const supabase = createSupabaseServiceClient();
-    const intent = await verifyOnChain(supabase, intentId);
+    const intent = await verifyOnChain(supabase, intentId, txHash);
     return NextResponse.json(intent);
   } catch (error) {
     return handleApiError(error);

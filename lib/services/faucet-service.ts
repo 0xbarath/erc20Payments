@@ -9,7 +9,7 @@ export async function recordFaucetRequest(
   walletAddress: string,
   chainId: number,
   tokenAddress: string,
-  requestedAmount: string = "100000000" // 100 USDC in atomic
+  requestedAmount: string = "100000000000000000000" // 100 EXP in atomic (18 decimals)
 ) {
   return createFaucetEvent(supabase, {
     walletAddress,

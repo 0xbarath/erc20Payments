@@ -40,11 +40,9 @@ function useCountdown(expiresAt: string) {
 export function QrCard({
   intent,
   paymentUrl,
-  emvQrData,
 }: {
   intent: PaymentIntent;
   paymentUrl: string;
-  emvQrData: string;
 }) {
   const countdown = useCountdown(intent.expiresAt);
   const expired = countdown === "Expired";
@@ -63,7 +61,7 @@ export function QrCard({
       <CardContent className="flex flex-col items-center gap-4">
         <div className="rounded-lg bg-white p-4">
           <QRCode
-            value={emvQrData}
+            value={paymentUrl}
             size={200}
             level="M"
             style={{ opacity: expired || terminal ? 0.3 : 1 }}

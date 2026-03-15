@@ -35,21 +35,41 @@ export function usePaymentExecution(intent: PaymentIntent | null) {
   useEffect(() => {
     if (!callsStatus || status !== "polling" || !intentId) return;
 
-    if (callsStatus.status === "success") {
-      const hash = callsStatus.receipts?.[0]?.transactionHash ?? null;
-      if (hash) setTxHash(hash);
-      setStatus("confirmed");
+    async function handleStatusUpdate() {
+      if (callsStatus!.status === "success") {
+        const hash = callsStatus!.receipts?.[0]?.transactionHash ?? null;
+        if (hash) setTxHash(hash);
 
-      // Verify on-chain (this also transitions status server-side)
-      fetch("/api/payment-status/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ intentId }),
-      }).catch(console.error);
-    } else if (callsStatus.status === "failure") {
-      setStatus("failed");
-      setError("Transaction failed on-chain");
+        // Step 1: Transition to payment_confirming in DB
+        try {
+          await postPaymentStatus({ intentId: intentId!, status: "payment_confirming" });
+        } catch (err) {
+          console.error("Failed to transition to payment_confirming:", err);
+        }
+
+        // Step 2: Verify on-chain — server transitions to payment_confirmed or payment_failed
+        try {
+          const res = await fetch("/api/payment-status/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ intentId, txHash: hash }),
+          });
+          if (!res.ok) throw new Error("Verify failed");
+          setStatus("confirmed");
+        } catch (err) {
+          console.error("Verification failed:", err);
+          setStatus("failed");
+          setError("On-chain verification failed");
+        }
+      } else if (callsStatus!.status === "failure") {
+        setStatus("failed");
+        setError("Transaction failed on-chain");
+
+        // Transition to payment_failed in DB
+        postPaymentStatus({ intentId: intentId!, status: "payment_failed" }).catch(console.error);
+      }
     }
+    handleStatusUpdate();
   }, [callsStatus, status, intentId]);
 
   const execute = useCallback(async () => {
@@ -74,12 +94,16 @@ export function usePaymentExecution(intent: PaymentIntent | null) {
       setCallsId(id);
       setStatus("polling");
 
-      // Fire-and-forget: notify API of submission
-      postPaymentStatus({
-        intentId: intent.id,
-        status: "payment_submitted",
-        callsId: id,
-      }).catch(console.error);
+      // Notify API of submission (continue to polling even on failure since tx was sent)
+      try {
+        await postPaymentStatus({
+          intentId: intent.id,
+          status: "payment_submitted",
+          callsId: id,
+        });
+      } catch (err) {
+        console.error("Failed to transition to payment_submitted:", err);
+      }
     } catch (err) {
       setStatus("failed");
       setError(extractErrorMessage(err, "Payment failed"));
