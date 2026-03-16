@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import type { PaymentIntent } from "@/lib/domain/x9a-compatible-intent";
 import { usePaymentExecution } from "@/hooks/use-payment-execution";
@@ -18,7 +18,6 @@ export function PaymentActions({
 }) {
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
   const { execute, status, txHash, error } = usePaymentExecution(intent);
   const transitioningRef = useRef(false);
 
@@ -70,12 +69,6 @@ export function PaymentActions({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-end">
-        <Button variant="ghost" size="sm" onClick={() => disconnect()}>
-          Disconnect
-        </Button>
-      </div>
-
       {status === "idle" && intent.status === "awaiting_payment" && (
         <Button className="w-full" size="lg" disabled>
           Connecting...

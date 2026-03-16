@@ -71,6 +71,22 @@ export async function getTransactionByIntent(
   return data ? mapTransactionFromDb(data) : null;
 }
 
+export async function getTransactionsByWallet(
+  supabase: SupabaseClient,
+  walletAddress: string,
+  limit = 10
+): Promise<Transaction[]> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .ilike("from_address", walletAddress)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []).map(mapTransactionFromDb);
+}
+
 export async function getTransactionByTxHash(
   supabase: SupabaseClient,
   txHash: string
