@@ -9,6 +9,7 @@ import {
   updateIntentStatus,
 } from "@/lib/repositories/payment-intents";
 import { createEvent } from "@/lib/repositories/payment-events";
+import { createTransaction } from "@/lib/repositories/transactions";
 import { getTokenConfig } from "@/lib/config/tokens";
 import { getServerEnv } from "@/lib/config/env";
 import { isSupportedChain } from "@/lib/config/chains";
@@ -128,9 +129,10 @@ export async function verifyOnChain(
   const client = getPublicClient(intent.chainId);
 
   try {
-    const receipt = await client.getTransactionReceipt({
-      hash: txHash as `0x${string}`,
-    });
+    const [receipt, tx] = await Promise.all([
+      client.getTransactionReceipt({ hash: txHash as `0x${string}` }),
+      client.getTransaction({ hash: txHash as `0x${string}` }),
+    ]);
 
     const newStatus: PaymentStatus =
       receipt.status === "success" ? "payment_confirmed" : "payment_failed";
@@ -151,6 +153,19 @@ export async function verifyOnChain(
         paymentIntentId: intentId,
         eventType: `status_${newStatus}`,
         payload: { from: intent.status, to: newStatus, txHash },
+      }),
+      createTransaction(supabase, {
+        paymentIntentId: intentId,
+        txHash,
+        blockNumber: String(receipt.blockNumber),
+        blockHash: receipt.blockHash,
+        fromAddress: tx.from,
+        toAddress: receipt.to ?? "",
+        gasUsed: String(receipt.gasUsed),
+        effectiveGasPrice: String(receipt.effectiveGasPrice),
+        status: receipt.status === "success" ? "success" : "reverted",
+        chainId: intent.chainId,
+        logCount: receipt.logs.length,
       }),
     ]);
 
