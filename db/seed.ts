@@ -18,8 +18,8 @@ async function seed() {
     .from("vendors")
     .upsert(
       {
-        slug: "acme-store",
-        name: "Acme Store",
+        slug: "erc20-payment-app",
+        name: "ERC20 Payment App",
         recipient_address: "0x742d35cc6634c0532925A3b844bc9E7595F2Bd1e",
         default_chain_id: 84532,
         default_token_address: "0xfca413a634c4df6b98ebb970a44d9a32f8f5c64e",

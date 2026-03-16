@@ -7,6 +7,7 @@ import type { PaymentIntent } from "@/lib/domain/x9a-compatible-intent";
 import { usePaymentExecution } from "@/hooks/use-payment-execution";
 import { isTerminal } from "@/lib/domain/payment-status";
 import { postPaymentStatus } from "@/lib/api-client";
+import { TransactionDetails } from "@/components/payment/transaction-details";
 
 export function PaymentActions({
   intent,
@@ -37,7 +38,12 @@ export function PaymentActions({
 
   if (terminal) {
     if (intent.status === "payment_confirmed") {
-      return <p className="text-center text-sm text-green-500">Payment confirmed!</p>;
+      return (
+        <div className="space-y-3">
+          <p className="text-center text-sm text-green-500">Payment confirmed!</p>
+          <TransactionDetails intentId={intent.id} chainId={intent.chainId} />
+        </div>
+      );
     }
     if (intent.status === "payment_failed") {
       return <p className="text-center text-sm text-destructive">Payment failed.</p>;
@@ -95,13 +101,9 @@ export function PaymentActions({
       )}
 
       {status === "confirmed" && (
-        <div className="text-center text-sm text-green-500">
-          Payment confirmed!
-          {txHash && (
-            <p className="mt-1 text-xs text-muted-foreground break-all">
-              Tx: {txHash}
-            </p>
-          )}
+        <div className="space-y-3">
+          <p className="text-center text-sm text-green-500">Payment confirmed!</p>
+          <TransactionDetails intentId={intent.id} chainId={intent.chainId} />
         </div>
       )}
 
